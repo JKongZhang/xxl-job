@@ -15,6 +15,7 @@ import java.util.Arrays;
 
 /**
  * xxl-job config
+ * 服务启动后就会对 XxlJobScheduler 进行初始化操作
  *
  * @author xuxueli 2017-04-28
  */
@@ -23,6 +24,7 @@ import java.util.Arrays;
 public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
 
     private static XxlJobAdminConfig adminConfig = null;
+
     public static XxlJobAdminConfig getAdminConfig() {
         return adminConfig;
     }
@@ -32,6 +34,11 @@ public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
 
     private XxlJobScheduler xxlJobScheduler;
 
+    /**
+     * 在配置文件加载完成之后将会进行一些初始化操作。
+     *
+     * @throws Exception
+     */
     @Override
     public void afterPropertiesSet() throws Exception {
         adminConfig = this;
@@ -40,6 +47,11 @@ public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
         xxlJobScheduler.init();
     }
 
+    /**
+     * 销毁操作
+     *
+     * @throws Exception
+     */
     @Override
     public void destroy() throws Exception {
         xxlJobScheduler.destroy();

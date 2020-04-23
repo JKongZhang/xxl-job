@@ -8,7 +8,10 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Created by xuxueli on 17/3/10.
+ * 随机
+ *
+ * @author xuxueli
+ * @date 17/3/10
  */
 public class ExecutorRouteRandom extends ExecutorRouter {
 
@@ -16,6 +19,7 @@ public class ExecutorRouteRandom extends ExecutorRouter {
 
     @Override
     public ReturnT<String> route(TriggerParam triggerParam, List<String> addressList) {
+        // 通过在集群列表的大小内随机拿出一台机器来执行
         String address = addressList.get(localRandom.nextInt(addressList.size()));
         return new ReturnT<String>(address);
     }

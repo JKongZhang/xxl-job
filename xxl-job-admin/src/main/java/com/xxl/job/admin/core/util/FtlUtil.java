@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 public class FtlUtil {
     private static Logger logger = LoggerFactory.getLogger(FtlUtil.class);
 
-    private static BeansWrapper wrapper = new BeansWrapperBuilder(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS).build();     //BeansWrapper.getDefaultInstance();
+    // BeansWrapper.getDefaultInstance();
+    private static BeansWrapper wrapper =
+            new BeansWrapperBuilder(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS).build();
 
     public static TemplateHashModel generateStaticModel(String packageName) {
         try {

@@ -10,6 +10,7 @@ public interface JobAlarm {
 
     /**
      * job alarm
+     * 任务失败，告警通知
      *
      * @param info
      * @param jobLog

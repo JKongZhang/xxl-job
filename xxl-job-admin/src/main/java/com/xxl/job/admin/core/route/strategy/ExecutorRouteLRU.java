@@ -19,6 +19,9 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class ExecutorRouteLRU extends ExecutorRouter {
 
+    /**
+     * 使用是linkHashMap来实现LRU算法的
+     */
     private static ConcurrentMap<Integer, LinkedHashMap<String, String>> jobLRUMap = new ConcurrentHashMap<Integer, LinkedHashMap<String, String>>();
     private static long CACHE_VALID_TIME = 0;
 
@@ -33,7 +36,7 @@ public class ExecutorRouteLRU extends ExecutorRouter {
         // init lru
         LinkedHashMap<String, String> lruItem = jobLRUMap.get(jobId);
         if (lruItem == null) {
-            /**
+            /*
              * LinkedHashMap
              *      a、accessOrder：true=访问顺序排序（get/put时排序）；false=插入顺序排期；
              *      b、removeEldestEntry：新增元素时将会调用，返回true时会删除最老元素；可封装LinkedHashMap并重写该方法，比如定义最大容量，超出是返回true即可实现固定长度的LRU算法；
@@ -42,13 +45,13 @@ public class ExecutorRouteLRU extends ExecutorRouter {
             jobLRUMap.putIfAbsent(jobId, lruItem);
         }
 
-        // put new
+        // put new 对新加入的执行器地址的处理
         for (String address: addressList) {
             if (!lruItem.containsKey(address)) {
                 lruItem.put(address, address);
             }
         }
-        // remove old
+        // remove old 对已废弃的执行器地址的处理
         List<String> delKeys = new ArrayList<>();
         for (String existKey: lruItem.keySet()) {
             if (!addressList.contains(existKey)) {
@@ -61,7 +64,7 @@ public class ExecutorRouteLRU extends ExecutorRouter {
             }
         }
 
-        // load
+        // load 取头部的一个元素，也就是最久操作过的数据
         String eldestKey = lruItem.entrySet().iterator().next().getKey();
         String eldestValue = lruItem.get(eldestKey);
         return eldestValue;

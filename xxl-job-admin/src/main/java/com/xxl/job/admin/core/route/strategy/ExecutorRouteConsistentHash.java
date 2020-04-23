@@ -19,6 +19,11 @@ import java.util.TreeMap;
  */
 public class ExecutorRouteConsistentHash extends ExecutorRouter {
 
+    /**
+     * 先构造一个长度为2^32的整数环（这个环被称为一致性Hash环），根据节点名称的Hash值（其分布为[0, 2^32-1]）
+     * 将服务器节点放置在这个Hash环上，然后根据数据的Key值计算得到其Hash值（其分布也为[0, 2^32-1]），接着
+     * 在Hash环上顺时针查找距离这个Key值的Hash值最近的服务器节点，完成Key到服务器的映射查找。
+     */
     private static int VIRTUAL_NODE_NUM = 100;
 
     /**
@@ -68,11 +73,16 @@ public class ExecutorRouteConsistentHash extends ExecutorRouter {
             }
         }
 
+        // 得到JobId的Hash值
         long jobHash = hash(String.valueOf(jobId));
+        // 调用treeMap的tailMap方法，拿到map中键大于jobHash的值列表
         SortedMap<Long, String> lastRing = addressRing.tailMap(jobHash);
+        // 如果addressRing中有比jobHash的那么直接取lastRing 的第一个
         if (!lastRing.isEmpty()) {
             return lastRing.get(lastRing.firstKey());
         }
+        // 如果没有，则直接取addressRing的第一个
+        // 反正最终的效果是在Hash环上，顺时针拿离jobHash最近的一个值
         return addressRing.firstEntry().getValue();
     }
 

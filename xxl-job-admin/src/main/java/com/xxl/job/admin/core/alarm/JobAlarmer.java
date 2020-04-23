@@ -14,6 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 告警通知器
+ *
+ * @author xuxueli
+ */
 @Component
 public class JobAlarmer implements ApplicationContextAware, InitializingBean {
     private static Logger logger = LoggerFactory.getLogger(JobAlarmer.class);
@@ -44,9 +49,10 @@ public class JobAlarmer implements ApplicationContextAware, InitializingBean {
     public boolean alarm(XxlJobInfo info, XxlJobLog jobLog) {
 
         boolean result = false;
-        if (jobAlarmList!=null && jobAlarmList.size()>0) {
-            result = true;  // success means all-success
-            for (JobAlarm alarm: jobAlarmList) {
+        if (jobAlarmList != null && jobAlarmList.size() > 0) {
+            // success means all-success
+            result = true;
+            for (JobAlarm alarm : jobAlarmList) {
                 boolean resultItem = false;
                 try {
                     resultItem = alarm.doAlarm(info, jobLog);
