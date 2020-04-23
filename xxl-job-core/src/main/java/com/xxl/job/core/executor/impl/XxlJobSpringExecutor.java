@@ -24,9 +24,9 @@ import java.util.Map;
  *
  * @author xuxueli 2018-11-01 09:24:52
  */
-public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationContextAware, SmartInitializingSingleton, DisposableBean {
+public class XxlJobSpringExecutor extends XxlJobExecutor
+        implements ApplicationContextAware, SmartInitializingSingleton, DisposableBean {
     private static final Logger logger = LoggerFactory.getLogger(XxlJobSpringExecutor.class);
-
 
     // start
     @Override
@@ -83,11 +83,17 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
             return;
         }
         // init job handler from method
+        // TODO: 2020/4/23 可以通过 applicationContext.getBeanNamesForAnnotation(Annotation) 指定JobHandler注解，然后再验证XxlJob方法
+        // 获取spring容器中注册的所有bean的name
         String[] beanDefinitionNames = applicationContext.getBeanNamesForType(Object.class, false, true);
+        // 遍历所有的bean，并获取对应的对象，然后验证此类中是否定义了XxlJob的method
         for (String beanDefinitionName : beanDefinitionNames) {
+            // 获取bean对象
             Object bean = applicationContext.getBean(beanDefinitionName);
 
-            Map<Method, XxlJob> annotatedMethods = null;   // referred to ：org.springframework.context.event.EventListenerMethodProcessor.processBean
+            // referred to ：org.springframework.context.event.EventListenerMethodProcessor.processBean
+            // 验证是否存在标注注解：@XxlJob的方法
+            Map<Method, XxlJob> annotatedMethods = null;
             try {
                 annotatedMethods = MethodIntrospector.selectMethods(bean.getClass(),
                         new MethodIntrospector.MetadataLookup<XxlJob>() {
@@ -99,26 +105,30 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
             } catch (Throwable ex) {
                 logger.error("xxl-job method-jobhandler resolve error for bean[" + beanDefinitionName + "].", ex);
             }
-            if (annotatedMethods==null || annotatedMethods.isEmpty()) {
+            if (annotatedMethods == null || annotatedMethods.isEmpty()) {
                 continue;
             }
 
+            // 如果此类存在 @XxlJob 注解的方法，那么将方法注册
             for (Map.Entry<Method, XxlJob> methodXxlJobEntry : annotatedMethods.entrySet()) {
+                // 获取方法信息和注解信息
                 Method method = methodXxlJobEntry.getKey();
                 XxlJob xxlJob = methodXxlJobEntry.getValue();
                 if (xxlJob == null) {
                     continue;
                 }
-
+                // job handler name
                 String name = xxlJob.value();
                 if (name.trim().length() == 0) {
                     throw new RuntimeException("xxl-job method-jobhandler name invalid, for[" + bean.getClass() + "#" + method.getName() + "] .");
                 }
+                // 验证jobhandler name是否已经存在，防止同一个jobhandler name对应多个处理方法
                 if (loadJobHandler(name) != null) {
                     throw new RuntimeException("xxl-job jobhandler[" + name + "] naming conflicts.");
                 }
 
                 // execute method
+                // 验证方法的入参及返回值类型
                 if (!(method.getParameterTypes().length == 1 && method.getParameterTypes()[0].isAssignableFrom(String.class))) {
                     throw new RuntimeException("xxl-job method-jobhandler param-classtype invalid, for[" + bean.getClass() + "#" + method.getName() + "] , " +
                             "The correct method format like \" public ReturnT<String> execute(String param) \" .");
@@ -129,7 +139,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
                 }
                 method.setAccessible(true);
 
-                // init and destory
+                // init and destroy method
                 Method initMethod = null;
                 Method destroyMethod = null;
 
@@ -150,7 +160,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
                     }
                 }
 
-                // registry jobhandler
+                // registry job handler 注册
                 registJobHandler(name, new MethodJobHandler(bean, method, initMethod, destroyMethod));
             }
         }

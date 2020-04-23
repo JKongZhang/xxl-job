@@ -58,7 +58,6 @@ public class TriggerCallbackThread {
 
             @Override
             public void run() {
-
                 // normal callback
                 while(!toStop){
                     try {
